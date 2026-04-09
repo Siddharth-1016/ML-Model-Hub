@@ -2,6 +2,13 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
+# ⭐ Page config (browser tab + layout)
+st.set_page_config(
+    page_title="ML Model Hub",
+    page_icon="🤖",
+    layout="wide"
+)
+
 from sklearn.datasets import (
     make_moons, make_circles, make_blobs,
     make_classification, make_gaussian_quantiles,
@@ -10,59 +17,44 @@ from sklearn.datasets import (
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 
-# Sidebar
+
+# ================= SIDEBAR =================
 st.sidebar.title("ML Model Hub – Compare Models on Multiple Datasets")
 
 dataset_name = st.sidebar.selectbox(
     "Dataset",
     (
-        "Moons",
-        "Circles",
-        "Blobs",
-        "Linearly Separable",
-        "Breast Cancer",
-        "Wine",
-        "Iris",
-        "Digits",
-        "Noisy Moons",
-        "Noisy Circles",
-        "XOR",
-        "Gaussian Quantiles"
+        "Moons", "Circles", "Blobs", "Linearly Separable",
+        "Breast Cancer", "Wine", "Iris", "Digits",
+        "Noisy Moons", "Noisy Circles", "XOR", "Gaussian Quantiles"
     )
 )
+
 models_selected = st.sidebar.multiselect(
     "Estimators",
     [
-        "Logistic Regression",
-        "SVM",
-        "KNN",
-        "Decision Tree",
-        "Random Forest",
-        "Gradient Boosting",
-        "AdaBoost",
-        "Naive Bayes",
-        "SGD Classifier",
-        "Neural Network (MLP)"
+        "Logistic Regression","SVM","KNN","Decision Tree",
+        "Random Forest","Gradient Boosting","AdaBoost",
+        "Naive Bayes","SGD Classifier","Neural Network (MLP)"
     ],
     default=["Logistic Regression", "SVM", "Random Forest"]
 )
 
 voting_type = st.sidebar.radio("Voting Type", ("hard", "soft"))
 
-# Dataset generator
+
+# ================= DATASETS =================
 def get_dataset(name):
 
-    # Toy datasets
     if name == "Moons":
         X, y = make_moons(n_samples=400, noise=0.25, random_state=42)
 
@@ -91,7 +83,6 @@ def get_dataset(name):
         X = np.random.randn(400, 2)
         y = np.logical_xor(X[:,0] > 0, X[:,1] > 0)
 
-    # Real datasets (we take only first 2 features for plotting)
     elif name == "Breast Cancer":
         data = load_breast_cancer()
         X, y = data.data[:, :2], data.target
@@ -110,10 +101,12 @@ def get_dataset(name):
 
     return X, y
 
+
 X, y = get_dataset(dataset_name)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-# Models
+
+# ================= MODELS =================
 estimators = []
 
 if "Logistic Regression" in models_selected:
@@ -146,17 +139,34 @@ if "SGD Classifier" in models_selected:
 if "Neural Network (MLP)" in models_selected:
     estimators.append(("mlp", MLPClassifier(max_iter=1000)))
 
-# Train Voting Classifier
+
+# ================= MAIN UI =================
 if len(estimators) > 0:
+
     voting_clf = VotingClassifier(estimators=estimators, voting=voting_type)
     voting_clf.fit(X_train, y_train)
     y_pred = voting_clf.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
-    st.title("Voting Classifier Visualization")
-    st.write("Accuracy:", round(acc, 3))
+    # ⭐ New Professional Title Section
+    st.title("ML Model Hub – Decision Boundary Explorer")
 
-    # Decision boundary plot
+    st.markdown(
+        f"""
+        ### Dataset: **{dataset_name}**
+        Compare how multiple machine learning models work together using a **Voting Classifier**.
+        """
+    )
+
+    st.success(f"Voting Accuracy: {round(acc,3)}")
+
+    st.write("### Selected Models:")
+    st.write(", ".join(models_selected))
+
+
+    # ================= PLOT =================
+    st.subheader("Decision Boundary Visualization")
+
     def plot_decision_boundary(model, X, y):
         h = 0.02
         x_min, x_max = X[:,0].min()-1, X[:,0].max()+1
@@ -178,4 +188,4 @@ if len(estimators) > 0:
     plot_decision_boundary(voting_clf, X, y)
 
 else:
-    st.write("Select at least one model")
+    st.warning("Please select at least one model from the sidebar.")
