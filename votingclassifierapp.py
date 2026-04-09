@@ -21,7 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 
 # Sidebar
-st.sidebar.title("Voting Classifier")
+st.sidebar.title("ML Model Hub – Compare Models on Multiple Datasets")
 
 dataset_name = st.sidebar.selectbox(
     "Dataset",
